@@ -26,8 +26,18 @@ jobs:
         with:
           gradle-version: '8.9'
 
-      - name: Extract project
-        run: unzip -o ARIANA_VPN_Android_Starter_FIXED.zip -d project
+      - name: Find and extract project
+        run: |
+          echo "Searching for ZIP files..."
+          find . -type f -iname "*.zip"
+          ZIP_FILE=$(find . -type f -iname "*ARIANA*FIXED*.zip" -print -quit)
+          if [ -z "$ZIP_FILE" ]; then
+            echo "ERROR: Fixed ZIP file not found!"
+            exit 1
+          fi
+          echo "Found: $ZIP_FILE"
+          mkdir -p project
+          unzip -o "$ZIP_FILE" -d project
 
       - name: Build APK
         run: gradle -p project :app:assembleDebug
