@@ -1,30 +1,39 @@
+
 name: Build ARIANA VPN
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - main
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
 
-      - uses: actions/setup-java@v4
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
 
-      - uses: gradle/actions/setup-gradle@v4
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
 
       - name: Extract project
-        run: unzip ARIANA_VPN_Android_Starter.zip -d project
+        run: unzip -o ARIANA_VPN_Android_Starter_FIXED.zip -d project
 
       - name: Build APK
         run: gradle -p project :app:assembleDebug
 
-      - uses: actions/upload-artifact@v4
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
         with:
           name: ARIANA-VPN-APK
           path: project/app/build/outputs/apk/debug/*.apk
