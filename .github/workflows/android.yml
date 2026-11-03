@@ -37,4 +37,3 @@ jobs:
         with:
           name: ARIANA-VPN-APK
           path: project/app/build/outputs/apk/debug/*.apk
-permissions: 
