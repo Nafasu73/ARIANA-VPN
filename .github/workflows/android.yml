@@ -47,3 +47,11 @@ jobs:
         with:
           name: ARIANA-VPN-APK
           path: project/app/build/outputs/apk/debug/*.apk
+      - name: Fix Gradle file
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path("project/app/build.gradle.kts")
+          s = p.read_text()
+          p.write_text(s.replace("\\n", "\n"))
+          PY
