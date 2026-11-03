@@ -9,7 +9,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
       - name: دریافت فایل‌ها
         uses: actions/checkout@v4
@@ -34,6 +33,16 @@ jobs:
           fi
           mkdir -p project
           unzip -o "$ZIP_FILE" -d project
+
+      - name: اصلاح فایل Gradle
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path("project/app/build.gradle.kts")
+          s = p.read_text()
+          s = s.replace(r"\n", "\n")
+          p.write_text(s)
+          PY
 
       - name: ساخت برنامه
         run: gradle -p project :app:assembleDebug
