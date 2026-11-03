@@ -28,16 +28,23 @@ jobs:
 
       - name: Find and extract project
         run: |
-          echo "Searching for ZIP files..."
-          find . -type f -iname "*.zip"
           ZIP_FILE=$(find . -type f -iname "*ARIANA*FIXED*.zip" -print -quit)
           if [ -z "$ZIP_FILE" ]; then
             echo "ERROR: Fixed ZIP file not found!"
             exit 1
           fi
-          echo "Found: $ZIP_FILE"
           mkdir -p project
           unzip -o "$ZIP_FILE" -d project
+
+      - name: Fix Gradle file
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path("project/app/build.gradle.kts")
+          s = p.read_text()
+          s = s.replace(r"\n", "\n")
+          p.write_text(s)
+          PY
 
       - name: Build APK
         run: gradle -p project :app:assembleDebug
@@ -47,11 +54,3 @@ jobs:
         with:
           name: ARIANA-VPN-APK
           path: project/app/build/outputs/apk/debug/*.apk
-      - name: Fix Gradle file
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          p = Path("project/app/build.gradle.kts")
-          s = p.read_text()
-          p.write_text(s.replace("\\n", "\n"))
-          PY
