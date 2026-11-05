@@ -34,6 +34,26 @@ jobs:
           flutter create --org ir.zahranet --project-name app --platforms=android .
           rm -f android/app/src/main/kotlin/ir/zahranet/app/MainActivity.kt
           cp -r android_overlay/app/src/main/* android/app/src/main/
+          mkdir -p android/app/libs
+          cp android_overlay/app/libs/hev-socks5-tunnel.aar android/app/libs/
+          python3 - <<'PY'
+          from pathlib import Path
+          kts = Path("android/app/build.gradle.kts")
+          groovy = Path("android/app/build.gradle")
+          if kts.exists():
+              p = kts
+              dep = '    implementation(files("libs/hev-socks5-tunnel.aar"))'
+          elif groovy.exists():
+              p = groovy
+              dep = "    implementation files('libs/hev-socks5-tunnel.aar')"
+          else:
+              raise SystemExit("Gradle build file not found")
+          s = p.read_text()
+          if "hev-socks5-tunnel.aar" not in s:
+              s = s.replace("dependencies {", "dependencies {\n" + dep, 1)
+          p.write_text(s)
+          print("HEV AAR dependency added to", p)
+          PY
 
       - name: Build APK
         run: flutter build apk --release --target-platform android-arm64
