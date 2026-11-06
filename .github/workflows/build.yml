@@ -50,9 +50,10 @@ jobs:
 
           if "hev-socks5-tunnel.aar" not in s:
               marker = "dependencies {"
-              if marker not in s:
-                  raise SystemExit("ERROR: dependencies block not found")
-              s = s.replace(marker, marker + "\n    " + dep, 1)
+              if marker in s:
+                  s = s.replace(marker, marker + "\n    " + dep, 1)
+              else:
+                  s += "\n\ndependencies {\n    " + dep + "\n}\n"
               p.write_text(s)
 
           if "hev-socks5-tunnel.aar" not in p.read_text():
