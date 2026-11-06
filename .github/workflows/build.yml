@@ -46,6 +46,8 @@ jobs:
               raise SystemExit("ERROR: Android app Gradle file not found")
 
           s = p.read_text()
+          s = s.replace("minSdk = flutter.minSdkVersion", "minSdk = 29")
+          s = s.replace("minSdkVersion flutter.minSdkVersion", "minSdkVersion 29")
           dep = 'implementation(files("libs/hev-socks5-tunnel.aar"))'
 
           if "hev-socks5-tunnel.aar" not in s:
