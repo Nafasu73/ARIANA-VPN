@@ -1,0 +1,19 @@
+name: ARIANA VPN Build
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: دریافت فایل‌ها
+        uses: actions/checkout@v4
+
+      - name: بررسی پروژه
+        run: |
+          ls -la
+          unzip -l ARIANA_VPN_Android_Starter.zip

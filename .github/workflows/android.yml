@@ -1,0 +1,54 @@
+name: Build ARIANA VPN
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: دریافت فایل‌ها
+        uses: actions/checkout@v4
+
+      - name: نصب Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: نصب Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+
+      - name: استخراج پروژه
+        run: |
+          ZIP_FILE=$(find . -type f -iname "*ARIANA*FIXED*.zip" -print -quit)
+          if [ -z "$ZIP_FILE" ]; then
+            echo "Project ZIP not found"
+            exit 1
+          fi
+          mkdir -p project
+          unzip -o "$ZIP_FILE" -d project
+
+      - name: اصلاح فایل Gradle
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path("project/app/build.gradle.kts")
+          s = p.read_text()
+          s = s.replace(r"\n", "\n")
+          p.write_text(s)
+          PY
+
+      - name: ساخت برنامه
+        run: gradle -p project :app:assembleDebug
+
+      - name: دریافت APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: ARIANA-VPN-APK
+          path: project/app/build/outputs/apk/debug/*.apk
