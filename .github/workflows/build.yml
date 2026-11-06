@@ -36,6 +36,7 @@ jobs:
           cp -r android_overlay/app/src/main/* android/app/src/main/
           mkdir -p android/app/libs
           cp android_overlay/app/libs/hev-socks5-tunnel.aar android/app/libs/
+
           python3 - <<'PY'
           from pathlib import Path
 
@@ -43,25 +44,46 @@ jobs:
           if not p.exists():
               p = Path("android/app/build.gradle")
           if not p.exists():
-              raise SystemExit("ERROR: Android app Gradle file not found")
+              raise SystemExit("ERROR: Gradle file not found")
 
           s = p.read_text()
           s = s.replace("minSdk = flutter.minSdkVersion", "minSdk = 29")
           s = s.replace("minSdkVersion flutter.minSdkVersion", "minSdkVersion 29")
-          dep = 'implementation(files("libs/hev-socks5-tunnel.aar"))'
 
+          dep = 'implementation(files("libs/hev-socks5-tunnel.aar"))'
           if "hev-socks5-tunnel.aar" not in s:
-              marker = "dependencies {"
-              if marker in s:
-                  s = s.replace(marker, marker + "\n    " + dep, 1)
+              if "dependencies {" in s:
+                  s = s.replace("dependencies {", "dependencies {\n    " + dep, 1)
               else:
                   s += "\n\ndependencies {\n    " + dep + "\n}\n"
-              p.write_text(s)
 
-          if "hev-socks5-tunnel.aar" not in p.read_text():
-              raise SystemExit("ERROR: HEV dependency was not added")
+          if "useLegacyPackaging" not in s:
+              if p.suffix == ".kts":
+                  packaging = """    packaging {
+                      jniLibs {
+                          useLegacyPackaging = true
+                      }
+                  }"""
+              else:
+                  packaging = """    packaging {
+                      jniLibs {
+                          useLegacyPackaging true
+                      }
+                  }"""
 
-          print("SUCCESS: HEV dependency verified in", p)
+              if "android {" not in s:
+                  raise SystemExit("ERROR: Android block not found")
+              s = s.replace("android {", "android {\n" + packaging, 1)
+
+          p.write_text(s)
+
+          check = p.read_text()
+          if "hev-socks5-tunnel.aar" not in check:
+              raise SystemExit("ERROR: AAR dependency missing")
+          if "useLegacyPackaging" not in check:
+              raise SystemExit("ERROR: Legacy packaging missing")
+
+          print("SUCCESS: Gradle settings verified")
           PY
 
       - name: Build APK
