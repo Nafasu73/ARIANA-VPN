@@ -38,21 +38,27 @@ jobs:
           cp android_overlay/app/libs/hev-socks5-tunnel.aar android/app/libs/
           python3 - <<'PY'
           from pathlib import Path
-          kts = Path("android/app/build.gradle.kts")
-          groovy = Path("android/app/build.gradle")
-          if kts.exists():
-              p = kts
-              dep = '    implementation(files("libs/hev-socks5-tunnel.aar"))'
-          elif groovy.exists():
-              p = groovy
-              dep = "    implementation files('libs/hev-socks5-tunnel.aar')"
-          else:
-              raise SystemExit("Gradle build file not found")
+
+          p = Path("android/app/build.gradle.kts")
+          if not p.exists():
+              p = Path("android/app/build.gradle")
+          if not p.exists():
+              raise SystemExit("ERROR: Android app Gradle file not found")
+
           s = p.read_text()
+          dep = 'implementation(files("libs/hev-socks5-tunnel.aar"))'
+
           if "hev-socks5-tunnel.aar" not in s:
-              s = s.replace("dependencies {", "dependencies {\n" + dep, 1)
-          p.write_text(s)
-          print("HEV AAR dependency added to", p)
+              marker = "dependencies {"
+              if marker not in s:
+                  raise SystemExit("ERROR: dependencies block not found")
+              s = s.replace(marker, marker + "\n    " + dep, 1)
+              p.write_text(s)
+
+          if "hev-socks5-tunnel.aar" not in p.read_text():
+              raise SystemExit("ERROR: HEV dependency was not added")
+
+          print("SUCCESS: HEV dependency verified in", p)
           PY
 
       - name: Build APK
